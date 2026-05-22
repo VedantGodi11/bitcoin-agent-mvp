@@ -1,5 +1,7 @@
 # Python
 venv/
+**/venv/
+**/.venv/
 __pycache__/
 *.pyc
 .env
@@ -7,6 +9,7 @@ __pycache__/
 
 # Node
 frontend/node_modules/
+frontend/.vite/
 frontend/dist/
 
 # IDE
@@ -17,6 +20,8 @@ frontend/dist/
 # Database
 postgres_data/
 *.db
+backend/bitcoin_agent_mvp.db
 
 # Logs
 *.log
+MVP_PLAN.md
