@@ -4,6 +4,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from . import models, database
 from .config import settings
@@ -28,7 +29,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def authenticate_user(db: Session, username: str, password: str):
-    user = db.query(models.User).filter(models.User.username == username).first()
+    normalized_input = username.strip()
+    user = db.query(models.User).filter(
+        (func.trim(models.User.username) == normalized_input) |
+        (func.lower(func.trim(models.User.email)) == normalized_input.lower())
+    ).first()
     if not user:
         return False
     if not verify_password(password, user.password_hash):

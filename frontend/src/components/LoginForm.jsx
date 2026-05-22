@@ -12,9 +12,14 @@ const LoginForm = ({ isRegister = false }) => {
   const { login, register } = useAuth();
 
   const handleChange = (e) => {
+    const rawValue = e.target.value;
+    const cleanedValue = ['username', 'email'].includes(e.target.name)
+      ? rawValue.trim()
+      : rawValue;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: cleanedValue
     });
   };
 

@@ -3,6 +3,22 @@ import api from '../services/api.js';
 
 const AuthContext = createContext();
 
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -16,42 +32,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on app start
     const token = localStorage.getItem('token');
     if (token) {
-      // For MVP, we'll just set user from token
-      // In production, you'd validate token with backend
-      setUser({ id: 1, username: 'user' }); // Placeholder
+      const payload = parseJwt(token);
+      if (payload?.sub) {
+        setUser({ username: payload.sub });
+      } else {
+        localStorage.removeItem('token');
+      }
     }
     setLoading(false);
   }, []);
 
   const login = async (username, password) => {
+    const trimmedUsername = username.trim();
     try {
       const response = await api.post('/api/auth/login', {
-        username,
+        username: trimmedUsername,
         password
       });
 
       const { access_token, user_id } = response.data;
       localStorage.setItem('token', access_token);
-      setUser({ id: user_id, username });
+      setUser({ id: user_id, username: trimmedUsername });
     } catch (error) {
       throw new Error(error.response?.data?.detail || 'Login failed');
     }
   };
 
   const register = async (username, email, password) => {
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
     try {
       const response = await api.post('/api/auth/register', {
-        username,
-        email,
+        username: trimmedUsername,
+        email: trimmedEmail,
         password
       });
 
       const { access_token, user_id } = response.data;
       localStorage.setItem('token', access_token);
-      setUser({ id: user_id, username });
+      setUser({ id: user_id, username: trimmedUsername });
     } catch (error) {
       throw new Error(error.response?.data?.detail || 'Registration failed');
     }
